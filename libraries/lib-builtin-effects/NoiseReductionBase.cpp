@@ -38,6 +38,7 @@
 #include "BasicUI.h"
 #include "EffectOutputTracks.h"
 #include "FFT.h"
+#include "ShuttleAutomation.h"
 #include "TrackSpectrumTransformer.h"
 #include "WaveTrack.h"
 #include <algorithm>
@@ -164,7 +165,6 @@ public:
 //----------------------------------------------------------------------------
 
 NoiseReductionBase::Settings::Settings()
-    : mDoProfile { true }
 {
    PrefsIO(true);
 }
@@ -461,9 +461,13 @@ bool NoiseReductionBase::Process(EffectInstance&, EffectSettings&)
    const auto stepsPerWindow = mSettings->StepsPerWindow();
    const auto stepSize = mSettings->WindowSize() / stepsPerWindow;
 
+    if (!mStatistics) {
+        mDoProfile = true;
+    }
+
    // Initialize statistics if gathering them, or check for mismatched
    // (advanced) settings if reducing noise.
-   if (mSettings->mDoProfile)
+   if (mDoProfile)
    {
       const auto spectrumSize = mSettings->SpectrumSize();
       mStatistics = std::make_unique<Statistics>(
@@ -521,12 +525,11 @@ bool NoiseReductionBase::Process(EffectInstance&, EffectSettings&)
    };
    bool bGoodResult =
       worker.Process(inWindowType, outWindowType, outputs.Get(), mT0, mT1);
-   const auto wasProfile = mSettings->mDoProfile;
-   if (mSettings->mDoProfile)
+   const auto wasProfile = mDoProfile;
+   if (mDoProfile)
    {
       if (bGoodResult)
-         mSettings->mDoProfile =
-            false; // So that "repeat last effect" will reduce noise
+         mDoProfile = false; // So that "repeat last effect" will reduce noise
       else
          mStatistics.reset(); // So that profiling must be done again before
                               // noise reduction
@@ -536,6 +539,14 @@ bool NoiseReductionBase::Process(EffectInstance&, EffectSettings&)
 
    return bGoodResult;
 }
+
+
+const EffectParameterMethods& NoiseReductionBase::Parameters() const
+{
+    static CapturedParameters<NoiseReductionBase, GetProfile> parameters;
+    return parameters;
+}
+
 
 NoiseReductionBase::Worker::~Worker()
 {
@@ -586,7 +597,7 @@ bool NoiseReductionBase::Worker::Process(
          std::optional<WaveTrack::Holder> ppTempTrack;
          std::optional<ChannelGroup::ChannelIterator<WaveChannel>> pIter;
          WaveTrack* pFirstTrack {};
-         if (!mSettings.mDoProfile)
+         if (!mDoProfile)
          {
             ppTempTrack.emplace(track->EmptyCopy());
             pFirstTrack = ppTempTrack->get();
@@ -597,13 +608,13 @@ bool NoiseReductionBase::Worker::Process(
             auto pOutputTrack = pIter ? *(*pIter)++ : nullptr;
             MyTransformer transformer { *this,
                                         pOutputTrack.get(),
-                                        !mSettings.mDoProfile,
+                                        !mDoProfile,
                                         inWindowType,
                                         outWindowType,
                                         mSettings.WindowSize(),
                                         mSettings.StepsPerWindow(),
-                                        !mSettings.mDoProfile,
-                                        !mSettings.mDoProfile };
+                                        !mDoProfile,
+                                        !mDoProfile };
             if (!transformer.Process(
                    Processor, *pChannel, mHistoryLen, start, len))
                return false;
@@ -674,7 +685,7 @@ NoiseReductionBase::Worker::Worker(
    double f0, double f1
 #endif
    )
-    : mDoProfile { settings.mDoProfile }
+    : mDoProfile { effect.mDoProfile }
 
     , mEffect { effect }
     , mSettings { settings }

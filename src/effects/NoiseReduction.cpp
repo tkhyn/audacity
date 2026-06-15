@@ -129,7 +129,7 @@ int PromptUser(
       return 0;
 
    settings = dlog.GetTempSettings();
-   settings.mDoProfile = (returnCode == 1);
+   effect->mDoProfile = (returnCode == 1);
 
    if (!settings.PrefsIO(false))
       return 0;
@@ -483,9 +483,11 @@ void EffectNoiseReduction::Dialog::OnPreview(wxCommandEvent & WXUNUSED(event))
       return;
 
    // Save & restore parameters around Preview, because we didn't do OK.
-   auto cleanup = valueRestorer( *m_pSettings );
+   auto cleanupSettings = valueRestorer( *m_pSettings );
+   auto cleanupEffect = valueRestorer(m_pEffect->mDoProfile);
+
    *m_pSettings = mTempSettings;
-   m_pSettings->mDoProfile = false;
+   m_pEffect->mDoProfile = false;
 
    EffectPreview(*m_pEffect, mAccess,
       // Don't need any UI updates for preview
