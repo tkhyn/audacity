@@ -1062,13 +1062,15 @@ if( CMAKE_SYSTEM_NAME MATCHES "Windows" )
    )
 
    # Copy the VC runtime libraries as well
-   add_custom_command(
-      TARGET
-         ${TARGET}
-      COMMAND
-         ${CMAKE_COMMAND} -E copy ${CMAKE_INSTALL_SYSTEM_RUNTIME_LIBS} ${_DEST}
-      POST_BUILD
-   )
+   if (DEFINED CMAKE_INSTALL_SYSTEM_RUNTIME_LIBS)
+     add_custom_command(
+        TARGET
+           ${TARGET}
+        COMMAND
+           ${CMAKE_COMMAND} -E copy ${CMAKE_INSTALL_SYSTEM_RUNTIME_LIBS} ${_DEST}
+        POST_BUILD
+     )
+   endif()
 
    # Copy resource files into build folder
    add_custom_command(
