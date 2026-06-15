@@ -10,6 +10,7 @@
 **********************************************************************/
 #pragma once
 
+#include "SettingsVisitor.h"
 #include "StatefulEffect.h"
 
 // Define both of these to make the radio button three-way
@@ -35,6 +36,12 @@ enum NoiseReductionChoice
 class BUILTIN_EFFECTS_API NoiseReductionBase : public StatefulEffect
 {
 public:
+   static inline NoiseReductionBase*
+   FetchParameters(NoiseReductionBase& e, EffectSettings&)
+   {
+       return &e;
+   }
+
    static const ComponentInterfaceSymbol Symbol;
 
    NoiseReductionBase();
@@ -85,8 +92,6 @@ public:
          return WindowSize() / StepsPerWindow();
       }
 
-      bool mDoProfile;
-
       // Stored in preferences:
 
       // Basic:
@@ -112,7 +117,15 @@ public:
    class Statistics;
    class Worker;
 
+   bool mDoProfile;
+
 protected:
    std::unique_ptr<Settings> mSettings;
    std::unique_ptr<Statistics> mStatistics;
+
+   const EffectParameterMethods& Parameters() const override;
+
+   static constexpr EffectParameter GetProfile {
+      &NoiseReductionBase::mDoProfile, L"GetProfile", false, false, true, 1
+   };
 };
