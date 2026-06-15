@@ -5,7 +5,7 @@
 #include <stdio.h>
 #include <tchar.h>
 
-const int nBuff = 1024;
+const int nBuff = 16384;
 
 extern "C" int DoSrv( char * pIn );
 extern "C" int DoSrvMore( char * pOut, size_t nMax );
@@ -17,7 +17,7 @@ void PipeServer()
 
    static const TCHAR pipeNameToSrv[] = _T("\\\\.\\pipe\\ToSrvPipe");
 
-   hPipeToSrv = CreateNamedPipe( 
+   hPipeToSrv = CreateNamedPipe(
       pipeNameToSrv ,
       PIPE_ACCESS_DUPLEX,
       PIPE_TYPE_MESSAGE | PIPE_READMODE_MESSAGE | PIPE_WAIT | PIPE_REJECT_REMOTE_CLIENTS,
@@ -31,7 +31,7 @@ void PipeServer()
 
    static const TCHAR pipeNameFromSrv[] = __T("\\\\.\\pipe\\FromSrvPipe");
 
-   hPipeFromSrv = CreateNamedPipe( 
+   hPipeFromSrv = CreateNamedPipe(
       pipeNameFromSrv ,
       PIPE_ACCESS_DUPLEX,
       PIPE_TYPE_MESSAGE | PIPE_READMODE_MESSAGE | PIPE_WAIT | PIPE_REJECT_REMOTE_CLIENTS,
@@ -54,14 +54,14 @@ void PipeServer()
 
    for(;;)
    {
-      // open to (incoming) pipe first.  
+      // open to (incoming) pipe first.
       printf( "Obtaining pipe\n" );
-      bConnected = ConnectNamedPipe(hPipeToSrv, NULL) ? 
+      bConnected = ConnectNamedPipe(hPipeToSrv, NULL) ?
          TRUE : (GetLastError()==ERROR_PIPE_CONNECTED );
       printf( "Obtained to-srv %i\n", bConnected );
 
       // open from (outgoing) pipe second.  This could block if there is no reader.
-      bConnected = ConnectNamedPipe(hPipeFromSrv, NULL) ? 
+      bConnected = ConnectNamedPipe(hPipeFromSrv, NULL) ?
          TRUE : (GetLastError()==ERROR_PIPE_CONNECTED );
       printf( "Obtained from-srv %i\n", bConnected );
 
@@ -72,7 +72,7 @@ void PipeServer()
             printf( "About to read\n" );
             bSuccess = ReadFile( hPipeToSrv, chRequest, nBuff, &cbBytesRead, NULL);
 
-            chRequest[ cbBytesRead] = '\0'; 
+            chRequest[ cbBytesRead] = '\0';
 
             if( !bSuccess || cbBytesRead==0 )
                break;
@@ -116,7 +116,7 @@ void PipeServer()
 
 const char fifotmpl[] = "/tmp/audacity_script_pipe.%s.%d";
 
-const int nBuff = 1024;
+const int nBuff = 16384;
 
 extern "C" int DoSrv( char * pIn );
 extern "C" int DoSrvMore( char * pOut, size_t nMax );
@@ -146,7 +146,7 @@ void PipeServer()
 //      return;
    }
 
-   // open to (incoming) pipe first.  
+   // open to (incoming) pipe first.
    toFifo = fopen(toFifoName, "r");
    if (toFifo == NULL)
    {
