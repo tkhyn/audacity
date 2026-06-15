@@ -110,10 +110,15 @@ else()
     set(_LIB_OUTPUT "${_LIB_OUTPUT}/lib/audacity")
 endif()
 
-
-find_package(Python3)
-if( Python3_FOUND )
-   set(PYTHON "${Python3_EXECUTABLE}")
+# do not use find_package as it doesn't work with pyenv
+find_program(PYTHON NAMES python3;python NO_CACHE)
+if(NOT PYTHON)
+  message(FATAL_ERROR "No Python executable found. Please install Python or set PATH.")
+elseif(${PYTHON} MATCHES ".*/shims/python.*")
+  # this is a python executable provided by pyenv, find actual python executable by executing
+  # `pyenv which python`
+  find_program(PYTHON NAMES pyenv.cmd pyenv NO_CACHE)
+  execute_process(COMMAND "${PYENV_EXECUTABLE}" which python OUTPUT_VARIABLE PYTHON OUTPUT_STRIP_TRAILING_WHITESPACE)
 endif()
 
 set( CMAKE_PREFIX_PATH
