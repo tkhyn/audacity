@@ -1061,15 +1061,11 @@ if( CMAKE_SYSTEM_NAME MATCHES "Windows" )
          RESOURCE "${WIN_RESOURCES}"
    )
 
+   set(COPY_TO_DEST ${RESOURCES};$<TARGET_FILE:${TARGET}>;$<$<CONFIG:Debug>:$<TARGET_PDB_FILE:${TARGET}>>)
+
    # Copy the VC runtime libraries as well
    if (DEFINED CMAKE_INSTALL_SYSTEM_RUNTIME_LIBS)
-     add_custom_command(
-        TARGET
-           ${TARGET}
-        COMMAND
-           ${CMAKE_COMMAND} -E copy ${CMAKE_INSTALL_SYSTEM_RUNTIME_LIBS} ${_DEST}
-        POST_BUILD
-     )
+     list(APPEND COPY_TO_DEST ${CMAKE_INSTALL_SYSTEM_RUNTIME_LIBS})
    endif()
 
    # Copy resource files into build folder
@@ -1077,7 +1073,7 @@ if( CMAKE_SYSTEM_NAME MATCHES "Windows" )
       TARGET
          ${TARGET}
       COMMAND
-         ${CMAKE_COMMAND} -E copy ${RESOURCES} ${_DEST}
+         ${CMAKE_COMMAND} -E copy ${COPY_TO_DEST} ${_DEST}
       POST_BUILD
    )
 elseif( CMAKE_SYSTEM_NAME MATCHES "Darwin" )
